@@ -1,0 +1,105 @@
+Metadata-Version: 2.4
+Name: translator-tts
+Version: 0.1.0
+Summary: Streamlit app for translation and TTS audio generation
+Requires-Python: >=3.12
+Description-Content-Type: text/markdown
+
+# Translator TTS — Capstone Generative AI & ML
+
+> **Objet :** guide de référence pour l'installation, l'utilisation et la livraison future de l'application Streamlit de traduction multilingue et synthèse MP3. **Statut au 24/10/2026 : spécifications uniquement ; application non implémentée.**
+
+## 1. Contexte, objectifs et périmètre
+
+Projet pédagogique issu du sujet Edureka « Generative AI and ML — Capstone Project », pp. 2–3 : saisir du texte ou importer un fichier PDF, TXT, CSV ou Excel ; choisir une langue ; traduire avec Gemini ; convertir la traduction en parole avec gTTS ; écouter et télécharger le MP3. L'application doit être utilisable, testable, sécurisée et déployable. Interface en français ; texte source dans toute langue que Gemini sait traiter, sans garantie universelle. Aucune base de données, aucun compte, aucun historique permanent, aucune OCR en V1.
+
+**Documents de gouvernance :** [AGENTS.md](AGENTS.md) est la première lecture de Codex ; [SPECIFICATIONS.md](SPECIFICATIONS.md) contient les exigences et la matrice de traçabilité ; [ARCHITECTURE.md](ARCHITECTURE.md) définit les interfaces ; [PLAN_IMPLEMENTATION.md](PLAN_IMPLEMENTATION.md) prescrit les phases ; [TESTS.md](TESTS.md), [SECURITE_ET_CONFIG.md](SECURITE_ET_CONFIG.md), [DEPLOIEMENT.md](DEPLOIEMENT.md) complètent le dispositif ; [RAPPORT_FINAL.md](RAPPORT_FINAL.md) demeure à compléter.
+
+## 2. Pile technologique décidée
+
+- Python **3.12** recommandé pour cohérence locale/cloud ; confirmer prise en charge lors du déploiement.
+- `streamlit` : widgets, état de session, lecture MP3, téléchargement.
+- `google-genai` : SDK officiel (`from google import genai`, `client.models.generate_content`). Modèle initial `gemini-3.8-flash` ; validation de son accès avec la clé réelle requise en intégration.
+- `gTTS` (`gtts`) : MP3 ; `gtts.lang.tts_langs()` définit les codes réellement proposés.
+- `pypdf` : extraction texte de PDF natifs ; **aucun OCR** ; `openpyxl` : XLSX en lecture seule ; `csv`, `io` et `codecs` de la bibliothèque standard : CSV/TXT.
+- `pytest`, `ruff` : vérification et qualité. Ne pas introduire `pandas`, `ffmpeg` ou service supplémentaire sans nécessité.
+
+**Important :** les versions définitives doivent être déterminées, verrouillées et testées par Codex au cours de la phase 1 ; le présent dossier ne prétend pas avoir exécuté une installation. Un `requirements.txt` sera créé durant cette phase, pas simulé dans ce dossier.
+
+## 3. Mise en route prévue (après implémentation)
+
+```bash
+python -m venv .venv
+# Linux/macOS
+source .venv/bin/activate
+# Windows PowerShell : .venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+cp .streamlit/secrets.toml.example .streamlit/secrets.toml
+# Éditer localement secrets.toml sans jamais le committer.
+python -m streamlit run app.py
+```
+
+Pour Windows, copier l'exemple avec `Copy-Item .streamlit/secrets.toml.example .streamlit/secrets.toml`. La variable `GEMINI_API_KEY` peut remplacer le fichier de secrets. Créer la clé sur Google AI Studio ; ne pas la mettre en argument shell visible ni dans le dépôt.
+
+Exemple du *futur* `.streamlit/secrets.toml.example` :
+
+```toml
+GEMINI_API_KEY = "REPLACE_ME_LOCALLY"
+```
+
+Exemple de configuration non secrète : `GEMINI_MODEL=gemini-3.8-flash` et paramètres documentés dans [SECURITE_ET_CONFIG.md](SECURITE_ET_CONFIG.md). Le modèle initial peut évoluer ; aucune clé ou quota n'est garanti par ce dossier.
+
+## 4. Parcours utilisateur prévu
+
+1. Coller le texte **ou** importer un fichier (un seul mode actif) ; afficher puis éventuellement corriger le texte extrait.
+2. Choisir une langue cible parmi celles annoncées par gTTS.
+3. Cliquer « Traduire » ; examiner la traduction produite sans texte superflu.
+4. Cliquer séparément « Générer l’audio » ; écouter le MP3 et cliquer « Télécharger le MP3 ».
+5. Si la source, la langue ou le texte traduit change, les résultats devenus obsolètes sont supprimés de la session.
+
+Limites recommandées en V1 : fichier jusqu'à **5 Mio** ; texte validé jusqu'à **10 000 caractères Unicode** ; audio jusqu'à **5 000 caractères** (après traduction). Refuser explicitement, ne pas tronquer silencieusement. Dépassements, erreurs réseau, quota et PDF scannés affichent un message clair.
+
+## 5. Validation prévue
+
+```bash
+python -m pytest -q
+python -m ruff check .
+python -m ruff format --check .
+```
+
+La suite unitaire doit tourner **sans clé API ni accès réseau**. Les contrôles réels Gemini/gTTS sont des tests d'intégration manuels, volontaires, jamais une condition de la suite hors ligne ; voir [TESTS.md](TESTS.md).
+
+## 6. Publication prévue
+
+Connecter le dépôt GitHub à Streamlit Community Cloud ; choisir `app.py`, Python 3.12 s'il est disponible, renseigner le secret `GEMINI_API_KEY` dans la console de déploiement, contrôler l'exécution réelle avec une clé autorisée, puis vérifier le téléchargement MP3. Procédure : [DEPLOIEMENT.md](DEPLOIEMENT.md). **Aucun déploiement n'a encore été effectué.**
+
+## 7. Documentation officielle vérifiée le 24/10/2026
+
+- Streamlit API : https://docs.streamlit.io/develop/api-reference/widgets/st.file_uploader ; https://docs.streamlit.io/develop/api-reference/media/st.audio ; https://docs.streamlit.io/develop/api-reference/widgets/st.download_button
+- Sessions Streamlit : https://docs.streamlit.io/develop/api-reference/caching-and-state/st.session_state
+- Gemini modèles : https://ai.google.dev/gemini-api/docs/models ; clé : https://ai.google.dev/gemini-api/docs/api-key
+- SDK Python : https://googleapis.github.io/python-genai/
+- gTTS : https://gtts.readthedocs.io/en/latest/module.html
+- pytest : https://docs.pytest.org/en/stable/how-to/monkeypatch.html
+- Community Cloud : https://docs.streamlit.io/deploy/streamlit-community-cloud/deploy-your-app/deploy
+
+**Incertitudes à lever en développement :** disponibilité effective du modèle pour la clé/zone/quota ; latence et limites des fournisseurs ; durée et ressources du cloud ; versions et comportements des bibliothèques résolues ; exactitude linguistique sur données réelles ; prise en charge de cas particuliers d'Excel/CSV. Aucun SLA garanti.
+
+## 8. Checklist de préparation pour Codex (dossier documentaire)
+
+- [x] Cahier des charges Edureka confronté au besoin détaillé.
+- [x] Modules, interfaces et flux Mermaid définis.
+- [x] Exigences FR/NFR et matrice exigences/modules/tests/acceptation établies.
+- [x] Cas limites TXT, PDF, CSV, XLSX, multi-feuilles, confidentialité définis.
+- [x] Tests unitaires hors ligne séparés de l'intégration externe.
+- [x] Dix phases avec critères de passage et rapports prévues.
+- [x] Règles d'agent et modèle de rapport final fournis.
+- [ ] Versions de dépendances et accès au modèle testés localement **par Codex**.
+- [ ] Déploiement, clé et tests cloud effectivement réalisés **plus tard**.
+
+### Instruction initiale à Codex
+
+> Lis intégralement AGENTS.md puis tous les documents référencés. Inspecte le dépôt. Exécute uniquement la phase 1 de PLAN_IMPLEMENTATION.md en respectant les spécifications et l'architecture. Installe les dépendances adaptées à Python 3.12, vérifie imports, tests et Ruff, puis fournis un compte rendu exact : fichiers changés, commandes, résultats, risques et conditions de passage. Ne commence pas les phases suivantes si un critère bloquant échoue.
+
+Pour poursuivre : « Vérifie le rapport de la dernière phase, relis PLAN_IMPLEMENTATION.md, inspecte l'état réel du dépôt et exécute la **prochaine phase autorisée**, avec tests et compte rendu. » Pour vérifier la fin : contrôler le code, les preuves `pytest`/Ruff, essais Gemini/gTTS réels, URL de déploiement effective et [RAPPORT_FINAL.md](RAPPORT_FINAL.md) sans cases fictivement cochées.
